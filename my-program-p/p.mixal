@@ -1,6 +1,7 @@
 * r2 - new prime offset
 * r3 - current prime offset
 * r4 - N, current number to test
+PRINTER EQU     18
 N       EQU     500           * CHANGEME - note: comments relative to N=500
 PRIME   EQU     0             * 0   first prime (primes 0-499)
 PRIMEE  EQU     PRIME+N-1     * 499 one past last prime
@@ -23,14 +24,35 @@ TESTP   ENTA    0             * load N into rAX
         JG      TESTP         * keep testing primes as long as the quotient is greater than the prime
 STP     ST4     PRIMEE,2      * store N in the next prime offset
         INC2    1             * update the counters for the next number
-        J2P     DONE          * accounted for the last prime, PRIMES DONE
+        J2P     PDONE          * accounted for the last prime, PRIMES DONE
 ADVN    ENT3    P1OFF         * advance N, resetting the prime to check
         INC4    2
         JMP     TESTP
 * r2 - current prime offset
 * r3 - current buffer offset
 * r4 - buffer counter
-* PPRIME  ENT2    P1
+PDONE   ENT2    P1OFF         * start at first prime
+        ENT3    BUF1OFF+1     * start at second index of first buffer (we never populate the first indexes)
+        ENT4    10            * start buffer counter for the first 10 spots
+        IOC     0(PRINTER)
+PPRIME  LDA     PRIMEE,2      * load current prime
+        CHAR
+        STX     BUFE,3(2:5)   * store prime characters
+        J2Z     PRINTD        * stored last prime, PRINT and DONE
+        INC2    50            * advance prime block
+        INC3    1
+        DEC4    1    
+        J4P     PPRIME          * > still have room in buffer, continue
+        DEC3    11              * PRINT BUFFER: move buffer offset to beginnig of buffer
+        OUT     BUFE,3(PRINTER) * print buffer
+        INC3    24              * switch buffer offset - move the offset to 1 past the end of the buffer
+        LD3     BUFE,3
+        INC3    1               * buffer offset at (+1) the other buffer
+        ENT4    10              * reset buffer counter
+        DEC2    N-1             * reset prime offset to (+1) the last initial prime offset
+        JMP     PPRIME
+PRINTD  DEC3    10              * PRINT BUFFER: move buffer offset to beginnig of buffer
+        OUT     BUFE,3(PRINTER) * print buffer
 DONE    HLT
         ORIG    0
         CON     2           * first prime is 2
