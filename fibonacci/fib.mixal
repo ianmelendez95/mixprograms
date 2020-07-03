@@ -1,0 +1,59 @@
+* r1 = MOVE target for fib update
+* r2 = # fibs calculated
+* r3 = current buffer offset
+* r4 = buffer counter
+PRINTER EQU     18
+N       EQU     44
+BUFSIZE EQU     24
+FIB     EQU     3000              * 3000-3001 fib
+BUF1    EQU     FIB+2             * 3002-3025 Buffer 1 > 3026 &Buffer 2
+BUF2    EQU     BUF1+BUFSIZE+1    * 3027-3050 Buffer 2 > 3051 &Buffer 1
+BUFE    EQU     BUF2+BUFSIZE      * 3051 end of buffer region
+BUF1OFF EQU     BUF1-BUFE         * -49 buffer 1 offset (from the end of the buffer region)
+BUF2OFF EQU     BUF2-BUFE         * -24 buffer 2 offset
+        ORIG    2000
+START   ENT1    FIB           * MOVE target, fib(n-1)
+        ENT2    N-2           * start fib counter at 2 less than N, since 2 are already accounted for
+        ENT3    BUF1OFF+4     * start at B1 offset after existing 2 fib numbers
+        ENT4    BUFSIZE-4     * start buffer counter as if we stored first two numbers
+        IOC     0(PRINTER)
+UPDFIB  LDA     FIB           * Update Fibonacci numbers 
+        ADD     FIB+1         *   (fib(n-1) <- fib(n), fib(n) <- fib(n) + fib(n-1))
+        MOVE    FIB+1(1)      * move fib(n) back to fib(n-1) 
+        DEC1    1             * undo MOVE advancement of rI1
+        STA     FIB+1         * update fib(n)
+        CHAR                  * convert fib(n) to characters
+        STA     BUFE,3(2:5)   * store first 4 characters
+        INC3    1             
+        STX     BUFE,3        * store last 5 characters
+        INC3    1             
+        DEC4    2             * decrement buffer counter
+        DEC2    1             * log that another fib is accounted for
+        J2Z     FIBDONE       * accounted for all fibs, flush current buffer and FIN
+        J4P     UPDFIB        * if buffer counter is still positive, continue populating the buffer
+        DEC3    BUFSIZE           * point current buffer offset to beginning of buffer
+        OUT     BUFE,3(PRINTER)   * flush the buffer
+        INC3    BUFSIZE           * point buffer offset back to end of buffer 
+        LD3     BUFE,3            * update the buffer offset
+        ENT4    BUFSIZE           * reset buffer counter
+        JMP     UPDFIB
+FIBDONE J4Z     FLUSHB          * done with buffer, flush it
+        STZ     BUFE,3          * zero buffer content
+        DEC4    1               * update buffer counter
+        INC3    1               * advance buffer offset
+        JMP     FIBDONE
+FLUSHB  DEC3    BUFSIZE         * decrement buffer offset to beginning of buffer
+        OUT     BUFE,3(PRINTER) * flush current buffer
+        HLT
+        ORIG    FIB
+        CON     1
+        CON     1
+        ALF     " 0000"
+        ALF     "00001"
+        ALF     " 0000"
+        ALF     "00001"
+        ORIG    BUF2-1          * end of buffer 1
+        CON     BUF2OFF
+        ORIG    BUFE            * end of buffer 2
+        CON     BUF1OFF
+        END     START
