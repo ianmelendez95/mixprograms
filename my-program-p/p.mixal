@@ -1,0 +1,28 @@
+* r2 - new prime offset
+* r3 - current prime offset 
+* r4 - N, current number to test
+L       EQU     500           * CHANGEME - note: comments relative to L=500
+PRIME   EQU     0             * 0   first prime (primes 0-499)
+PRIMEE  EQU     PRIME+L       * 500 one past last prime
+P1OFF   EQU     PRIME-PRIMEE  * -500 offset to first prime
+        ORIG    3000
+START   ENT2    P1OFF+1       * start with second prime
+        ENT3    P1OFF         * start testing with first prime  
+        ENT4    3             * next number is 3
+TESTP   ENTA    0             * load N into rAX
+        ENTX    0,4
+        DIV     PRIMEE,3      * divide N by the current prime
+        JXZ     ADVN          * if remainder is zero, not prime, move to next N
+        CMPA    PRIMEE,3      * see if the quotient is less than the current prime
+        INC3    1             * advance current prime
+        JG      TESTP         * keep testing primes as long as the quotient is greater than the prime
+STP     ST4     PRIMEE,2      * store N in the next prime offset
+        INC2    1             * update the counters for the next number
+        J2Z     DONE          * accounted for the last prime, PRIMES DONE
+ADVN    ENT3    P1OFF         * advance N, resetting the prime to check
+        INC4    2
+        JMP     TESTP
+DONE    HLT
+        ORIG    0
+        CON     2           * first prime is 2
+        END     START
