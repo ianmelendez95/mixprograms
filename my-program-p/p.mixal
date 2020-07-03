@@ -1,14 +1,19 @@
 * r2 - new prime offset
-* r3 - current prime offset 
+* r3 - current prime offset
 * r4 - N, current number to test
-L       EQU     500           * CHANGEME - note: comments relative to L=500
+N       EQU     500           * CHANGEME - note: comments relative to N=500
 PRIME   EQU     0             * 0   first prime (primes 0-499)
-PRIMEE  EQU     PRIME+L       * 500 one past last prime
-P1OFF   EQU     PRIME-PRIMEE  * -500 offset to first prime
+PRIMEE  EQU     PRIME+N-1     * 499 one past last prime
+P1OFF   EQU     PRIME-PRIMEE  * -499 offset to first prime
+BUF1    EQU     PRIMEE+1      * 500-523 buffer 1, 524 buffer 2 offset
+BUF2    EQU     BUF1+25       * 525-548 buffer 2, 549 buffer 1 offset
+BUFE    EQU     BUF2+24       * 549 end of buffer region
+BUF1OFF EQU     BUF1-BUFE     
+BUF2OFF EQU     BUF2-BUFE
         ORIG    3000
 START   ENT2    P1OFF+1       * start with second prime
         ENT3    P1OFF         * start testing with first prime  
-        ENT4    3             * next number is 3
+        ENT4    3             * next N is 3
 TESTP   ENTA    0             * load N into rAX
         ENTX    0,4
         DIV     PRIMEE,3      * divide N by the current prime
@@ -18,10 +23,14 @@ TESTP   ENTA    0             * load N into rAX
         JG      TESTP         * keep testing primes as long as the quotient is greater than the prime
 STP     ST4     PRIMEE,2      * store N in the next prime offset
         INC2    1             * update the counters for the next number
-        J2Z     DONE          * accounted for the last prime, PRIMES DONE
+        J2P     DONE          * accounted for the last prime, PRIMES DONE
 ADVN    ENT3    P1OFF         * advance N, resetting the prime to check
         INC4    2
         JMP     TESTP
+* r2 - current prime offset
+* r3 - current buffer offset
+* r4 - buffer counter
+* PPRIME  ENT2    P1
 DONE    HLT
         ORIG    0
         CON     2           * first prime is 2
