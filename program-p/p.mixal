@@ -13,21 +13,21 @@ BUF1OFF EQU     BUF1-BUFE
 BUF2OFF EQU     BUF2-BUFE
         ORIG    3000
 START   ENT2    P1OFF+1       * start with second prime
-        ENT3    P1OFF         * start testing with first prime  
+        ENT3    P1OFF         * start testing with second prime (we're skipping even numbers!)
         ENT4    3             * next N is 3
-TESTP   ENTA    0             * load N into rAX
+STP     ST4     PRIMEE,2      * [Store Prime] N is prime, store it
+        INC2    1             * advance to next prime slot
+        J2P     PDONE         * stored last prime, done with primes
+ADVN    ENT3    P1OFF+1       * [Advance N] reset the prime to check (start with 3, since we skip even)
+        INC4    2             * advance N by 2 to skip even numbers
+TESTP   ENTA    0             * [Test N for Prime] load N into rAX
         ENTX    0,4
         DIV     PRIMEE,3      * divide N by the current prime
-        JXZ     ADVN          * if remainder is zero, not prime, move to next N
+        JXZ     ADVN          * [N\P?] if remainder is zero, not prime, move to next N
         CMPA    PRIMEE,3      * see if the quotient is less than the current prime
         INC3    1             * advance current prime
         JG      TESTP         * keep testing primes as long as the quotient is greater than the prime
-STP     ST4     PRIMEE,2      * store N in the next prime offset
-        INC2    1             * update the counters for the next number
-        J2P     PDONE          * accounted for the last prime, PRIMES DONE
-ADVN    ENT3    P1OFF         * advance N, resetting the prime to check
-        INC4    2
-        JMP     TESTP
+        JMP     STP
 * r2 - current prime offset
 * r3 - current buffer offset
 * r4 - buffer counter
