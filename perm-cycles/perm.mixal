@@ -8,10 +8,9 @@ BEGIN     LDA   EQUALS            * [initialize] rA <- "    =", J <- 0
           JBUS  *(CARDS)          *   wait for card to read in
           OUT   PERMS,2(PRINTER)  * [print card] print loaded card
           JBUS  *(PRINTER)        *   wait for printer to finish
-          INC2  CARDS-1           * [last card?] move J to last field
-          CMPA  PERMS,2           *   is last field "    ="?
+          CMPA  PERMS+15,2        * [last card?] compare last field to "    ="?
           JE    DONE              *   is last field, DONE
-          CMP2  =MAXWDS-1=        * [J excessive?] if J shows we have filled the mem region
+          CMP2  =MAXWDS-16=        * [J excessive?] if J shows we have filled the mem region
           JL    *+2           
           HLT                     *   J is excessive, HALT    
           INC2  1                 *   otherwise, advance J
