@@ -1,20 +1,25 @@
 MAXWDS    EQU   1200
 PERMS     ORIG  *+MAXWDS
+BUFFER    ORIG  *+24
 CARDS     EQU   16
 PRINTER   EQU   18
-BEGIN     LDA   EQUALS            * [initialize] rA <- "    =", J <- 0
+BEGIN     IOC   0(PRINTER)        * printer to new page
+          LDA   EQUALS            * [initialize] rA <- "    =", J <- 0
           ENT2  0
-2H        IN    PERMS,2(CARDS)    * [load card] load card into Perms[J]
-          JBUS  *(CARDS)          *   wait for card to read in
-          OUT   PERMS,2(PRINTER)  * [print card] print loaded card
-          JBUS  *(PRINTER)        *   wait for printer to finish
-          CMPA  PERMS+15,2        * [last card?] compare last field to "    ="?
-          JE    DONE              *   is last field, DONE
-          CMP2  =MAXWDS-16=        * [J excessive?] if J shows we have filled the mem region
-          JL    *+2           
+          IN    PERMS,2(CARDS)    * [load first card]
+1H        JBUS  *(CARDS)          *   wait for card to finish reading
+          CMPA  PERMS+15,2        * [flag last card?] compare last field to "    ="?
+          JE    *+2               *   skip reading next if its the last card
+          IN    PERMS+16,2(CARDS) * [load card] start loading next card into Perms[J+16]
+          ENT1  BUFFER            * [print card] 
+          JBUS  *(PRINTER)        *   wait for printer to finish (notice just before we mess with memory region)
+          MOVE  PERMS,2(16)       *   move card to buffer region
+          OUT   BUFFER(PRINTER)   *   and print it
+          JE    DONE              * [check last card?] is last card? - DONE
+          INC2  16                * [advance J] advance J to region being filled
+          CMP2  =MAXWDS-16=       * [J excessive?] if J shows we have filled the last mem region
+          JLE   1B
           HLT                     *   J is excessive, HALT    
-          INC2  1                 *   otherwise, advance J
-          JMP   2B                *   and load next card
 EQUALS    ALF   "    ="
 DONE      HLT
           END   BEGIN
