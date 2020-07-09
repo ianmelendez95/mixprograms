@@ -1,28 +1,25 @@
-MAXWDS    EQU   1200
-PERMS     ORIG  *+MAXWDS
-BUFFER    ORIG  *+24
-CARDS     EQU   16
-PRINTER   EQU   18
-BEGIN     IOC   0(PRINTER)        * printer to new page
-          IN    PERMS,2(CARDS)    * [load first card]
-          LDA   EQUALS            * [initialize] rA <- "    =", J <- 0
-          ENT2  0
-1H        JBUS  *(CARDS)          *   wait for card to finish reading
-          CMPA  PERMS+15,2        * [flag last card?] compare last field to "    ="?
-          JE    *+2               *   skip reading next if its the last card
-          IN    PERMS+16,2(CARDS) * [load card] start loading next card into Perms[J+16]
-          ENT1  BUFFER            * [print card] 
-          JBUS  *(PRINTER)        *   wait for printer to finish (notice just before we mess with memory region)
-          MOVE  PERMS,2(16)       *   move card to buffer region
-          OUT   BUFFER(PRINTER)   *   and print it
-          JE    DONE              * [check last card?] is last card? - DONE
-          INC2  16                * [advance J] advance J to region being filled
-          CMP2  =MAXWDS-16=       * [J excessive?] if J shows we have filled the last mem region
-          JLE   1B
-          HLT                     *   J is excessive, HALT    
-EQUALS    ALF   "    ="
-DONE      HLT
-          END   BEGIN
-          
-
+MAXWDS  EQU   1200
+PERMS   ORIG  *+MAXWDS
+BUFFER  ORIG  *+24
+CARDS   EQU   16
+PRINTER EQU   18
+BEGIN   IN    PERMS(CARDS)        * load first card
+        LDA   EQUALS              * rA <- "    ="
+        ENT2  0                   * J <- 0
+1H      JBUS  *(CARDS)
+        CMPA  PERMS+15,2          * EQ = last card
+        JE    *+2                 * if last card don't load next card
+        IN    PERMS+16,2(CARDS)   * start loading next card into next region
+        ENT1  BUFFER              * [print card]
+        JBUS  *(PRINTER)
+        MOVE  PERMS,2(16)
+        OUT   BUFFER(PRINTER)     * print buffer (current card contents)
+        JE    DONE                * last card printing, DONE
+        INC2  16                  * advance J to next region
+        CMP2  =MAXWDS-16=         * where is J relative to last region
+        JLE   1B                  * before or in last region? continue
+        HLT   666                 * excessive input!
+DONE    HLT
+EQUALS  ALF   "    ="
+        END   BEGIN
 
