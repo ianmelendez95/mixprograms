@@ -4,9 +4,9 @@ BUFFER    ORIG  *+24
 CARDS     EQU   16
 PRINTER   EQU   18
 BEGIN     IOC   0(PRINTER)        * printer to new page
+          IN    PERMS,2(CARDS)    * [load first card]
           LDA   EQUALS            * [initialize] rA <- "    =", J <- 0
           ENT2  0
-          IN    PERMS,2(CARDS)    * [load first card]
 1H        JBUS  *(CARDS)          *   wait for card to finish reading
           CMPA  PERMS+15,2        * [flag last card?] compare last field to "    ="?
           JE    *+2               *   skip reading next if its the last card
