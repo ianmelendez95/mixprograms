@@ -1,0 +1,4 @@
+#!/usr/bin/bash
+
+mixasm perm.mixal
+mixvm perm.mix

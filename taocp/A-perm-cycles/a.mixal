@@ -8,7 +8,7 @@ BEGIN   IN    PERM(CARDS)       Read first card
         ENT2  0
         LDA   EQUALS
 1H      JBUS  *(CARDS)          Wait for cycle complete
-        CMPA  PERM+15,2     
+        CMPA  PERM+15,2
         JE    *+2               Is it the last card?
         IN    PERM+16,2(CARDS)  No, read another
         ENT1  OUTBUF
@@ -42,10 +42,10 @@ OPEN    ENT3  0                 [A2. Open]
 1H      LDXN  PERM,3            Look for untagged element
         JXN   GO
         INC3  1
-        CMP3  SIZE  
+        CMP3  SIZE
         JL    1B
 *                               All are tagged. No comes the output.
-DONE    CMP1  =ANS=   
+DONE    CMP1  =ANS=
         JNE   *+2               Is answer the identity permutation?
         MOVE  LPREN(2)          If so, change to '()'.
         MOVE  =0=               Put 23 words of blanks after answer.

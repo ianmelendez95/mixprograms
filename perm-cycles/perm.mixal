@@ -14,12 +14,38 @@ BEGIN     IN    PERMS(CARDS)        * load first card
           JBUS  *(PRINTER)
           MOVE  PERMS,2(16)
           OUT   BUFFER(PRINTER)     * print buffer (current card contents)
-          JE    DONE                * last card printing, DONE
+          JE    1F                  * last card printing, DONE
           INC2  16                  * advance J to next region
           CMP2  =MAXWDS-16=         * where is J relative to last region
           JLE   1B                  * before or in last region? continue
           HLT   666                 * excessive input!
+1H        INC2  15
+          ST2   SIZE                * SIZE = size of input
+          ENT2  0                   * J <- 0 (reset counter)
+* find next left paren
+4H        LDAN  PERMS,2             * load next symbol into rA (tagged)
+          CMPA  LPAREN(1:5)         * is next symbol a left paren?
+          JE    5F                  * left paren, handle
+2H        INC2  1                   * decrement J and check next symbol for left paren
+          CMP2  SIZE
+          JGE   DONE
+          JL    4B
+* handle after left paren
+5H        STA   PERMS,2             * store it tagged
+          LDXN  PERMS+1,2           * store the symbol following in rX
+          INC2  1                   * move J forward to the next symbol
+3H        INC2  1
+          LDAN  PERMS,2             * load the next symbol
+          CMPA  RPAREN(1:5)         * is the right parentheses?
+          JNE   3B                  * if is not right parentheses, continue looping
+          STX   PERMS,2             * otherwise, store the first symbol where the right parens is
+          INC2  1
+          CMP2  SIZE                * see if we've hit size limit
+          JGE   DONE                * handled all input, done!
+          JL    4B                  * otherwise, find next left paren
 DONE      HLT
 EQUALS    ALF   "    ="
+LPAREN    ALF   "    ("
+RPAREN    ALF   ")    "
           END   BEGIN
 
