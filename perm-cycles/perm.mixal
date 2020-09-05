@@ -22,27 +22,19 @@ BEGIN     IN    PERMS(CARDS)        * load first card
 1H        INC2  15
           ST2   SIZE                * SIZE = size of input
           ENT2  0                   * J <- 0 (reset counter)
-* find next left paren
-4H        LDAN  PERMS,2             * load next symbol into rA (tagged)
-          CMPA  LPAREN(1:5)         * is next symbol a left paren?
-          JE    5F                  * left paren, handle
-2H        INC2  1                   * decrement J and check next symbol for left paren
-          CMP2  SIZE
-          JGE   DONE
-          JL    4B
-* handle after left paren
-5H        STA   PERMS,2             * store it tagged
-          LDXN  PERMS+1,2           * store the symbol following in rX
-          INC2  1                   * move J forward to the next symbol
-3H        INC2  1
-          LDAN  PERMS,2             * load the next symbol
-          CMPA  RPAREN(1:5)         * is the right parentheses?
-          JNE   3B                  * if is not right parentheses, continue looping
-          STX   PERMS,2             * otherwise, store the first symbol where the right parens is
-          INC2  1
-          CMP2  SIZE                * see if we've hit size limit
-          JGE   DONE                * handled all input, done!
-          JL    4B                  * otherwise, find next left paren
+          LDAN  PERMS,2             * load symbol, tagged
+          CMPA  LPAREN(1:5)         * is it '('?
+          JNE   2F
+          STA   PERMS,2             * if it is, store it
+          INC2  1                   * load next nonblank symbol into rX
+          LDXN  PERMS,2
+          JXZ   *-2
+2H        CMPA  RPAREN(1:5)         * is it ')'?
+          JNE   *+2
+          STX   PERMS,2
+          INC3  1
+          CMP3  SIZE
+          JL    2B                  * if still within input, continue looping
 DONE      HLT
 EQUALS    ALF   "    ="
 LPAREN    ALF   "    ("
